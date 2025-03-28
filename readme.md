@@ -5,7 +5,7 @@ Welcome to **Python Games**, a collection of simple games built using Python and
 ## Features
 
 - **Blackjack**: A classic card game where you compete against the dealer.
-- **Leaderboard**: Compete with 30,000+ fake players and see your rank on the leaderboard.
+- **Leaderboard**: Compete and see your rank on the leaderboard.
 - **User Profiles**: Set your username to personalize your experience.
 
 ## Getting Started
