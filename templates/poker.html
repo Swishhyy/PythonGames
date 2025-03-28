@@ -218,9 +218,10 @@
       }
 
       class Player {
-        constructor(name, isAI = false) {
+        constructor(name, isAI = false, profilePicture = null) {
           this.name = name;
           this.isAI = isAI;
+          this.profilePicture = profilePicture;
           this.hand = [];
           this.chips = 1000; // Starting chips
           this.folded = false;
@@ -253,6 +254,8 @@
       const raiseBtn = document.getElementById("raise-btn");
       const foldBtn = document.getElementById("fold-btn");
       const showHideBtn = document.getElementById("show-hide-btn");
+
+      const aiProfilePictures = ["/static/images/robot.png"];
 
       numPlayersInput.addEventListener("change", () => {
         const numPlayers = parseInt(numPlayersInput.value);
@@ -295,7 +298,13 @@
                 }`
               : document.getElementById(`player-${i}-name`).value ||
                 `Player ${i}`;
-          players.push(new Player(playerName, playerType === "ai"));
+          const profilePicture =
+            playerType === "ai"
+              ? aiProfilePictures[(i - 1) % aiProfilePictures.length]
+              : "/static/profile-placeholder.png";
+          players.push(
+            new Player(playerName, playerType === "ai", profilePicture)
+          );
         }
         startGame();
       });
@@ -409,7 +418,7 @@
                 <div class="turn-indicator" style="display: ${
                   index === currentPlayerIndex ? "block" : "none"
                 }">Your Turn</div>
-                <img src="/static/profile-placeholder.png" alt="Profile Picture" />
+                <img src="${player.profilePicture}" alt="Profile Picture" />
                 <h3>${player.name}</h3>
                 <p>${player.folded ? "Folded" : `Chips: ${player.chips}`}</p>
                 <p class="player-hand">${player.hand
