@@ -1,0 +1,133 @@
+body {
+  font-family: Arial, sans-serif;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background-color: #f4f4f9;
+  color: #333;
+  overflow-x: hidden;
+}
+
+header {
+  width: 100%;
+  background-color: #007bff;
+  color: white;
+  padding: 10px 0;
+  text-align: center;
+  font-size: 24px;
+  position: relative;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+nav {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+}
+
+nav a {
+  margin: 0 10px;
+  color: white;
+  text-decoration: none;
+  font-size: 18px;
+  transition: color 0.3s;
+}
+
+nav a:hover {
+  color: #ffdd57;
+}
+
+.game-container {
+  margin-top: 20px;
+  text-align: center;
+  width: 100%;
+  max-width: 600px;
+  padding: 20px;
+  background-color: #ffffff;
+  border-radius: 10px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.hand {
+  margin: 15px;
+  padding: 15px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  background-color: #f9f9f9;
+  display: inline-block;
+  width: calc(50% - 20px);
+  min-height: 100px;
+  box-sizing: border-box;
+}
+
+.buttons {
+  margin: 20px;
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+button {
+  padding: 10px 20px;
+  margin: 5px;
+  font-size: 16px;
+  cursor: pointer;
+  border: none;
+  border-radius: 5px;
+  background-color: #007bff;
+  color: white;
+  transition: background-color 0.3s, transform 0.2s;
+  flex: 1 1 calc(33% - 10px);
+  max-width: 150px;
+}
+
+button:hover {
+  background-color: #0056b3;
+  transform: scale(1.05);
+}
+
+#result {
+  font-size: 18px;
+  margin-top: 20px;
+  font-weight: bold;
+  min-height: 24px;
+}
+
+#leaderboard {
+  margin-top: 30px;
+  text-align: left;
+  width: 100%;
+  max-width: 600px;
+  background-color: #ffffff;
+  border-radius: 10px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  padding: 15px;
+}
+
+#leaderboard table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+#leaderboard th,
+#leaderboard td {
+  border: 1px solid #ccc;
+  padding: 8px;
+  text-align: left;
+  word-wrap: break-word;
+}
+
+#leaderboard th {
+  background-color: #f0f0f0;
+}
+
+@media (max-width: 768px) {
+  .hand {
+    width: 100%;
+  }
+  button {
+    flex: 1 1 100%;
+  }
+}
