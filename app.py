@@ -2,6 +2,7 @@ import sqlite3
 import random
 from flask import Flask, render_template, request, jsonify
 from Games.blackjack import Deck, Player
+from Games.poker import Deck, Player
 
 app = Flask(__name__)
 
@@ -42,6 +43,10 @@ def index():
 @app.route("/blackjack")
 def blackjack():
     return render_template("blackjack.html")
+
+@app.route("/poker")
+def poker():
+    return render_template("poker.html")
 
 @app.route("/start", methods=["POST"])
 def start_game():

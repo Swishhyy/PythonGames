@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Poker</title>
+    <link rel="stylesheet" href="/static/styles.css" />
+  </head>
+  <body>
+    <header>
+      Poker
+      <nav>
+        <a href="/">Home</a>
+        <a href="https://discord.com" target="_blank">Discord</a>
+        <a href="https://github.com" target="_blank">GitHub</a>
+      </nav>
+    </header>
+    <div class="game-container">
+      <h1>Poker</h1>
+      <div id="lobby-settings">
+        <h2>Lobby Settings</h2>
+        <label for="num-players">Number of Players (2-6):</label>
+        <input type="number" id="num-players" min="2" max="6" value="2" />
+        <div id="player-settings"></div>
+        <button id="start-lobby-btn">Start Lobby</button>
+      </div>
+      <div id="game-area" style="display: none">
+        <div id="players"></div>
+        <div id="community-cards" class="hand">
+          <h3>Community Cards</h3>
+          <p id="community-hand"></p>
+        </div>
+        <div class="buttons">
+          <button id="bet-btn" disabled>Bet</button>
+          <button id="raise-btn" disabled>Raise</button>
+          <button id="fold-btn" disabled>Fold</button>
+          <button id="next-round-btn" disabled>Next Round</button>
+        </div>
+        <p id="result"></p>
+      </div>
+    </div>
+    <script>
+      class Card {
+        constructor(suit, rank) {
+          this.suit = suit;
+          this.rank = rank;
+        }
+
+        toString() {
+          return `${this.rank} of ${this.suit}`;
+        }
+      }
+
+      class Deck {
+        constructor() {
+          const suits = ["Hearts", "Diamonds", "Clubs", "Spades"];
+          const ranks = [
+            "2",
+            "3",
+            "4",
+            "5",
+            "6",
+            "7",
+            "8",
+            "9",
+            "10",
+            "J",
+            "Q",
+            "K",
+            "A",
+          ];
+          this.cards = [];
+          for (const suit of suits) {
+            for (const rank of ranks) {
+              this.cards.push(new Card(suit, rank));
+            }
+          }
+          this.shuffle();
+        }
+
+        shuffle() {
+          for (let i = this.cards.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [this.cards[i], this.cards[j]] = [this.cards[j], this.cards[i]];
+          }
+        }
+
+        draw() {
+          return this.cards.pop();
+        }
+      }
+
+      class Player {
+        constructor(name, isAI = false) {
+          this.name = name;
+          this.isAI = isAI;
+          this.hand = [];
+          this.chips = 1000; // Starting chips
+          this.folded = false;
+        }
+
+        addCard(card) {
+          this.hand.push(card);
+        }
+
+        toString() {
+          return `${this.name}'s hand: ${this.hand
+            .map((card) => card.toString())
+            .join(", ")}`;
+        }
+      }
+
+      let deck, players, communityCards, currentPlayerIndex;
+
+      const lobbySettings = document.getElementById("lobby-settings");
+      const numPlayersInput = document.getElementById("num-players");
+      const playerSettingsDiv = document.getElementById("player-settings");
+      const startLobbyBtn = document.getElementById("start-lobby-btn");
+
+      const gameArea = document.getElementById("game-area");
+      const communityHand = document.getElementById("community-hand");
+      const playersDiv = document.getElementById("players");
+      const result = document.getElementById("result");
+
+      const betBtn = document.getElementById("bet-btn");
+      const raiseBtn = document.getElementById("raise-btn");
+      const foldBtn = document.getElementById("fold-btn");
+      const nextRoundBtn = document.getElementById("next-round-btn");
+
+      numPlayersInput.addEventListener("change", () => {
+        const numPlayers = parseInt(numPlayersInput.value);
+        playerSettingsDiv.innerHTML = "";
+        for (let i = 1; i <= numPlayers; i++) {
+          playerSettingsDiv.innerHTML += `
+            <label for="player-${i}-type">Player ${i}:</label>
+            <select id="player-${i}-type">
+              <option value="human">Human</option>
+              <option value="ai">AI</option>
+            </select><br />
+          `;
+        }
+      });
+
+      startLobbyBtn.addEventListener("click", () => {
+        const numPlayers = parseInt(numPlayersInput.value);
+        players = [];
+        for (let i = 1; i <= numPlayers; i++) {
+          const playerType = document.getElementById(`player-${i}-type`).value;
+          players.push(new Player(`Player ${i}`, playerType === "ai"));
+        }
+        startGame();
+      });
+
+      function startGame() {
+        lobbySettings.style.display = "none";
+        gameArea.style.display = "block";
+
+        deck = new Deck();
+        communityCards = [];
+        currentPlayerIndex = 0;
+
+        // Deal two cards to each player
+        players.forEach((player) => {
+          player.addCard(deck.draw());
+          player.addCard(deck.draw());
+        });
+
+        updateUI();
+        enablePlayerActions();
+      }
+
+      function enablePlayerActions() {
+        const currentPlayer = players[currentPlayerIndex];
+        if (currentPlayer.folded) {
+          nextPlayer();
+          return;
+        }
+        if (currentPlayer.isAI) {
+          aiAction(currentPlayer);
+        } else {
+          betBtn.disabled = false;
+          raiseBtn.disabled = false;
+          foldBtn.disabled = false;
+        }
+      }
+
+      function aiAction(player) {
+        // Placeholder AI logic
+        player.folded = Math.random() < 0.3; // 30% chance to fold
+        nextPlayer();
+      }
+
+      function nextPlayer() {
+        currentPlayerIndex = (currentPlayerIndex + 1) % players.length;
+        enablePlayerActions();
+      }
+
+      betBtn.addEventListener("click", () => {
+        const currentPlayer = players[currentPlayerIndex];
+        currentPlayer.chips -= 10; // Placeholder bet amount
+        nextPlayer();
+        updateUI();
+      });
+
+      raiseBtn.addEventListener("click", () => {
+        const currentPlayer = players[currentPlayerIndex];
+        currentPlayer.chips -= 20; // Placeholder raise amount
+        nextPlayer();
+        updateUI();
+      });
+
+      foldBtn.addEventListener("click", () => {
+        const currentPlayer = players[currentPlayerIndex];
+        currentPlayer.folded = true;
+        nextPlayer();
+        updateUI();
+      });
+
+      nextRoundBtn.addEventListener("click", () => {
+        if (communityCards.length < 5) {
+          communityCards.push(deck.draw());
+        } else {
+          determineWinner();
+          nextRoundBtn.disabled = true;
+        }
+        updateUI();
+      });
+
+      function updateUI() {
+        communityHand.textContent = communityCards
+          .map((card) => card.toString())
+          .join(", ");
+        playersDiv.innerHTML = players
+          .map(
+            (player) =>
+              `<div class="hand">
+                <h3>${player.name} (${player.isAI ? "AI" : "Human"})</h3>
+                <p>${
+                  player.folded
+                    ? "Folded"
+                    : player.hand.map((card) => card.toString()).join(", ")
+                }</p>
+                <p>Chips: ${player.chips}</p>
+              </div>`
+          )
+          .join("");
+      }
+
+      function determineWinner() {
+        // Placeholder logic for determining the winner
+        const activePlayers = players.filter((player) => !player.folded);
+        if (activePlayers.length === 1) {
+          result.textContent = `Winner: ${activePlayers[0].name}`;
+        } else {
+          result.textContent = "Winner: Placeholder logic";
+        }
+      }
+    </script>
+  </body>
+</html>
