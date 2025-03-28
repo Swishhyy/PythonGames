@@ -25,19 +25,28 @@ Welcome to **Python Games**, a collection of simple games built using Python and
    cd PythonGames
    ```
 
-2. Install the required dependencies:
+2. **Set up a virtual environment (recommended):**
+
+   Create and activate a virtual environment to isolate dependencies:
+
+   ```bash
+   python -m venv venv
+   source venv/bin/activate  # On Windows: venv\Scripts\activate
+   ```
+
+3. Install the required dependencies:
 
    ```bash
    pip install -r requirements.txt
    ```
 
-3. Run the application:
+4. Run the application:
 
    ```bash
    python app.py
    ```
 
-4. Open your browser and navigate to `http://127.0.0.1:5000`.
+5. Open your browser and navigate to `http://127.0.0.1:5000`.
 
 ## Contributing
 
