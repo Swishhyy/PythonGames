@@ -5,6 +5,122 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Poker</title>
     <link rel="stylesheet" href="/static/styles.css" />
+    <style>
+      .poker-table {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        position: relative;
+        width: 600px;
+        height: 400px;
+        margin: 20px auto;
+        border: 4px solid #007bff;
+        border-radius: 50%;
+        background: radial-gradient(circle, #2e8b57, #006400);
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+      }
+
+      .player-box {
+        position: absolute;
+        width: 80px;
+        height: 80px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .player-box img {
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        border: 2px solid #fff;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+      }
+
+      .player-box h3 {
+        margin: 5px 0 0;
+        font-size: 12px;
+        color: #fff;
+        text-shadow: 1px 1px 2px #000;
+      }
+
+      .player-box p {
+        margin: 0;
+        font-size: 10px;
+        color: #fff;
+        text-shadow: 1px 1px 2px #000;
+      }
+
+      .player-box[data-position="1"] {
+        top: 10px;
+        left: 50%;
+        transform: translateX(-50%);
+      }
+
+      .player-box[data-position="2"] {
+        top: 50%;
+        left: 10px;
+        transform: translateY(-50%);
+      }
+
+      .player-box[data-position="3"] {
+        bottom: 10px;
+        left: 50%;
+        transform: translateX(-50%);
+      }
+
+      .player-box[data-position="4"] {
+        top: 50%;
+        right: 10px;
+        transform: translateY(-50%);
+      }
+
+      .player-box[data-position="5"] {
+        top: 20%;
+        left: 20%;
+      }
+
+      .player-box[data-position="6"] {
+        top: 20%;
+        right: 20%;
+      }
+
+      .community-cards {
+        margin: 20px 0;
+        text-align: center;
+      }
+
+      .action-buttons {
+        margin-top: 20px;
+        display: flex;
+        justify-content: center;
+        gap: 10px;
+      }
+
+      .turn-indicator {
+        position: absolute;
+        top: -20px;
+        left: 50%;
+        transform: translateX(-50%);
+        background-color: #ffdd57;
+        color: #000;
+        font-size: 12px;
+        font-weight: bold;
+        padding: 2px 5px;
+        border-radius: 5px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+      }
+
+      .player-hand {
+        display: none;
+        margin-top: 10px;
+        font-size: 12px;
+        color: #fff;
+        text-shadow: 1px 1px 2px #000;
+      }
+    </style>
   </head>
   <body>
     <header>
@@ -25,16 +141,18 @@
         <button id="start-lobby-btn">Start Lobby</button>
       </div>
       <div id="game-area" style="display: none">
-        <div id="players"></div>
-        <div id="community-cards" class="hand">
-          <h3>Community Cards</h3>
-          <p id="community-hand"></p>
+        <div class="poker-table">
+          <div id="community-cards" class="community-cards">
+            <h3>Community Cards</h3>
+            <p id="community-hand"></p>
+          </div>
+          <div id="players"></div>
         </div>
-        <div class="buttons">
+        <div class="action-buttons">
           <button id="bet-btn" disabled>Bet</button>
           <button id="raise-btn" disabled>Raise</button>
           <button id="fold-btn" disabled>Fold</button>
-          <button id="next-round-btn" disabled>Next Round</button>
+          <button id="show-hide-btn" style="display: none">Show Cards</button>
         </div>
         <p id="result"></p>
       </div>
@@ -125,14 +243,15 @@
       const betBtn = document.getElementById("bet-btn");
       const raiseBtn = document.getElementById("raise-btn");
       const foldBtn = document.getElementById("fold-btn");
-      const nextRoundBtn = document.getElementById("next-round-btn");
+      const showHideBtn = document.getElementById("show-hide-btn");
 
       numPlayersInput.addEventListener("change", () => {
         const numPlayers = parseInt(numPlayersInput.value);
         playerSettingsDiv.innerHTML = "";
         for (let i = 1; i <= numPlayers; i++) {
           playerSettingsDiv.innerHTML += `
-            <label for="player-${i}-type">Player ${i}:</label>
+            <label for="player-${i}-name">Player ${i} Name:</label>
+            <input type="text" id="player-${i}-name" placeholder="Enter name" />
             <select id="player-${i}-type">
               <option value="human">Human</option>
               <option value="ai">AI</option>
@@ -146,7 +265,14 @@
         players = [];
         for (let i = 1; i <= numPlayers; i++) {
           const playerType = document.getElementById(`player-${i}-type`).value;
-          players.push(new Player(`Player ${i}`, playerType === "ai"));
+          const playerName =
+            playerType === "ai"
+              ? `AI ${
+                  ["Daniel", "James", "Sophia", "Emma", "Oliver", "Mia"][i - 1]
+                }`
+              : document.getElementById(`player-${i}-name`).value ||
+                `Player ${i}`;
+          players.push(new Player(playerName, playerType === "ai"));
         }
         startGame();
       });
@@ -181,6 +307,7 @@
           betBtn.disabled = false;
           raiseBtn.disabled = false;
           foldBtn.disabled = false;
+          showHideBtn.style.display = "block";
         }
       }
 
@@ -192,7 +319,20 @@
 
       function nextPlayer() {
         currentPlayerIndex = (currentPlayerIndex + 1) % players.length;
-        enablePlayerActions();
+        if (currentPlayerIndex === 0) {
+          nextRound();
+        } else {
+          enablePlayerActions();
+        }
+      }
+
+      function nextRound() {
+        if (communityCards.length < 5) {
+          communityCards.push(deck.draw());
+        } else {
+          determineWinner();
+        }
+        updateUI();
       }
 
       betBtn.addEventListener("click", () => {
@@ -216,14 +356,18 @@
         updateUI();
       });
 
-      nextRoundBtn.addEventListener("click", () => {
-        if (communityCards.length < 5) {
-          communityCards.push(deck.draw());
+      showHideBtn.addEventListener("click", () => {
+        const currentPlayer = players[currentPlayerIndex];
+        const handElement = document.querySelector(
+          `.player-box[data-position="${currentPlayerIndex + 1}"] .player-hand`
+        );
+        if (handElement.style.display === "none") {
+          handElement.style.display = "block";
+          showHideBtn.textContent = "Hide Cards";
         } else {
-          determineWinner();
-          nextRoundBtn.disabled = true;
+          handElement.style.display = "none";
+          showHideBtn.textContent = "Show Cards";
         }
-        updateUI();
       });
 
       function updateUI() {
@@ -232,22 +376,23 @@
           .join(", ");
         playersDiv.innerHTML = players
           .map(
-            (player) =>
-              `<div class="hand">
-                <h3>${player.name} (${player.isAI ? "AI" : "Human"})</h3>
-                <p>${
-                  player.folded
-                    ? "Folded"
-                    : player.hand.map((card) => card.toString()).join(", ")
-                }</p>
-                <p>Chips: ${player.chips}</p>
+            (player, index) =>
+              `<div class="player-box" data-position="${index + 1}">
+                <div class="turn-indicator" style="display: ${
+                  index === currentPlayerIndex ? "block" : "none"
+                }">Your Turn</div>
+                <img src="/static/profile-placeholder.png" alt="Profile Picture" />
+                <h3>${player.name}</h3>
+                <p>${player.folded ? "Folded" : `Chips: ${player.chips}`}</p>
+                <p class="player-hand">${player.hand
+                  .map((card) => card.toString())
+                  .join(", ")}</p>
               </div>`
           )
           .join("");
       }
 
       function determineWinner() {
-        // Placeholder logic for determining the winner
         const activePlayers = players.filter((player) => !player.folded);
         if (activePlayers.length === 1) {
           result.textContent = `Winner: ${activePlayers[0].name}`;
