@@ -120,6 +120,15 @@
         color: #fff;
         text-shadow: 1px 1px 2px #000;
       }
+
+      .player-name-field {
+        display: block;
+        margin-bottom: 5px;
+      }
+
+      .hidden {
+        display: none;
+      }
     </style>
   </head>
   <body>
@@ -250,15 +259,29 @@
         playerSettingsDiv.innerHTML = "";
         for (let i = 1; i <= numPlayers; i++) {
           playerSettingsDiv.innerHTML += `
-            <label for="player-${i}-name">Player ${i} Name:</label>
-            <input type="text" id="player-${i}-name" placeholder="Enter name" />
-            <select id="player-${i}-type">
-              <option value="human">Human</option>
-              <option value="ai">AI</option>
-            </select><br />
+            <div id="player-${i}-settings">
+              <label for="player-${i}-name">Player ${i} Name:</label>
+              <input type="text" id="player-${i}-name" class="player-name-field" placeholder="Enter name" />
+              <select id="player-${i}-type" onchange="toggleNameField(${i})">
+                <option value="human">Human</option>
+                <option value="ai">AI</option>
+              </select>
+            </div>
           `;
         }
       });
+
+      function toggleNameField(playerIndex) {
+        const playerType = document.getElementById(
+          `player-${playerIndex}-type`
+        ).value;
+        const nameField = document.getElementById(`player-${playerIndex}-name`);
+        if (playerType === "ai") {
+          nameField.classList.add("hidden");
+        } else {
+          nameField.classList.remove("hidden");
+        }
+      }
 
       startLobbyBtn.addEventListener("click", () => {
         const numPlayers = parseInt(numPlayersInput.value);
@@ -278,6 +301,11 @@
       });
 
       function startGame() {
+        if (players.length < 2) {
+          alert("At least 2 players are required to start the game.");
+          return;
+        }
+
         lobbySettings.style.display = "none";
         gameArea.style.display = "block";
 
