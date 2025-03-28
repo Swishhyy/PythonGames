@@ -10,237 +10,39 @@
         margin: 0;
         padding: 0;
         display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
         height: 100vh;
-        overflow: hidden;
-      }
-      #main-content {
-        flex: 1;
-        padding: 20px;
-        overflow-y: auto;
-      }
-      #leaderboard {
-        width: 300px;
         background-color: #f4f4f9;
-        border-left: 1px solid #ccc;
-        overflow-y: auto;
-        padding: 10px;
-      }
-      #leaderboard h2 {
-        text-align: center;
-      }
-      #leaderboard table {
-        width: 100%;
-        border-collapse: collapse;
-      }
-      #leaderboard th,
-      #leaderboard td {
-        border: 1px solid #ccc;
-        padding: 8px;
-        text-align: left;
-      }
-      #leaderboard th {
-        background-color: #f0f0f0;
       }
       .game-selection {
         text-align: center;
-        margin-top: 50px;
       }
       .game-selection button {
-        padding: 10px 20px;
+        padding: 15px 30px;
         margin: 10px;
-        font-size: 16px;
+        font-size: 18px;
         cursor: pointer;
-      }
-      .hand {
-        margin: 10px;
-        padding: 10px;
-        border: 1px solid #ccc;
+        border: none;
         border-radius: 5px;
-        background-color: #fff;
-        display: inline-block;
-        width: 40%;
+        background-color: #007bff;
+        color: white;
+        transition: background-color 0.3s;
       }
-      .buttons {
-        margin: 20px;
-      }
-      button {
-        padding: 10px 20px;
-        margin: 5px;
-        font-size: 16px;
-        cursor: pointer;
-      }
-      #username-prompt {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        margin-top: 50px;
-      }
-      #username-prompt input {
-        padding: 10px;
-        margin: 10px;
-        font-size: 16px;
+      .game-selection button:hover {
+        background-color: #0056b3;
       }
     </style>
   </head>
   <body>
-    <div id="username-prompt" style="display: none">
-      <h2>Enter Your Username</h2>
-      <input type="text" id="username-input" placeholder="Enter username" />
-      <button onclick="setUsername()">Submit</button>
-    </div>
-    <div id="main-content" style="display: none">
+    <div class="game-selection">
       <h1>Welcome to Python Games</h1>
-      <div class="game-selection">
-        <h2>Select a Game</h2>
-        <button onclick="startBlackjack()">Play Blackjack</button>
-        <!-- Add more games here in the future -->
-      </div>
-      <div id="blackjack-game" style="display: none">
-        <h2>Blackjack</h2>
-        <div id="dealer" class="hand">
-          <h3>Dealer's Hand</h3>
-          <p id="dealer-hand"></p>
-          <p id="dealer-value"></p>
-        </div>
-        <div id="player" class="hand">
-          <h3>Your Hand</h3>
-          <p id="player-hand"></p>
-          <p id="player-value"></p>
-        </div>
-        <div class="buttons">
-          <button id="start-btn">Start Game</button>
-          <button id="hit-btn" disabled>Hit</button>
-          <button id="stand-btn" disabled>Stand</button>
-        </div>
-        <p id="result"></p>
-      </div>
+      <h2>Select a Game</h2>
+      <button onclick="window.location.href='/blackjack'">
+        Play Blackjack
+      </button>
+      <!-- Add more games here in the future -->
     </div>
-    <div id="leaderboard">
-      <h2>Leaderboard</h2>
-      <table>
-        <thead>
-          <tr>
-            <th>Rank</th>
-            <th>Name</th>
-            <th>Score</th>
-          </tr>
-        </thead>
-        <tbody id="leaderboard-body"></tbody>
-      </table>
-    </div>
-    <script>
-      const startBtn = document.getElementById("start-btn");
-      const hitBtn = document.getElementById("hit-btn");
-      const standBtn = document.getElementById("stand-btn");
-      const playerHand = document.getElementById("player-hand");
-      const playerValue = document.getElementById("player-value");
-      const dealerHand = document.getElementById("dealer-hand");
-      const dealerValue = document.getElementById("dealer-value");
-      const result = document.getElementById("result");
-      const leaderboardBody = document.getElementById("leaderboard-body");
-      const blackjackGame = document.getElementById("blackjack-game");
-      const usernamePrompt = document.getElementById("username-prompt");
-      const mainContent = document.getElementById("main-content");
-      const usernameInput = document.getElementById("username-input");
-
-      function updateLeaderboard() {
-        fetch("/leaderboard")
-          .then((response) => response.json())
-          .then((data) => {
-            leaderboardBody.innerHTML = "";
-            data.forEach((player, index) => {
-              const row = document.createElement("tr");
-              row.innerHTML = `<td>${index + 1}</td><td>${player[0]}</td><td>${
-                player[1]
-              }</td>`;
-              leaderboardBody.appendChild(row);
-            });
-          });
-      }
-
-      function startBlackjack() {
-        blackjackGame.style.display = "block";
-        document.querySelector(".game-selection").style.display = "none";
-      }
-
-      startBtn.addEventListener("click", () => {
-        fetch("/start", { method: "POST" })
-          .then((response) => response.json())
-          .then((data) => {
-            playerHand.textContent = data.player_hand.join(", ");
-            playerValue.textContent = `Value: ${data.player_value}`;
-            dealerHand.textContent = data.dealer_hand.join(", ");
-            dealerValue.textContent = "";
-            result.textContent = "";
-            hitBtn.disabled = false;
-            standBtn.disabled = false;
-          });
-      });
-
-      hitBtn.addEventListener("click", () => {
-        fetch("/hit", { method: "POST" })
-          .then((response) => response.json())
-          .then((data) => {
-            playerHand.textContent = data.player_hand.join(", ");
-            playerValue.textContent = `Value: ${data.player_value}`;
-            if (data.result) {
-              result.textContent = data.result;
-              hitBtn.disabled = true;
-              standBtn.disabled = true;
-              updateLeaderboard();
-            }
-          });
-      });
-
-      standBtn.addEventListener("click", () => {
-        fetch("/stand", { method: "POST" })
-          .then((response) => response.json())
-          .then((data) => {
-            dealerHand.textContent = data.dealer_hand.join(", ");
-            dealerValue.textContent = `Value: ${data.dealer_value}`;
-            result.textContent = data.result;
-            hitBtn.disabled = true;
-            standBtn.disabled = true;
-            updateLeaderboard();
-          });
-      });
-
-      function checkUsername() {
-        fetch("/get_username")
-          .then((response) => response.json())
-          .then((data) => {
-            if (!data.username) {
-              usernamePrompt.style.display = "flex";
-            } else {
-              mainContent.style.display = "block";
-            }
-          });
-      }
-
-      function setUsername() {
-        const username = usernameInput.value.trim();
-        if (!username) {
-          alert("Username cannot be empty!");
-          return;
-        }
-        fetch("/set_username", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ username }),
-        })
-          .then((response) => response.json())
-          .then((data) => {
-            if (data.error) {
-              alert(data.error);
-            } else {
-              usernamePrompt.style.display = "none";
-              mainContent.style.display = "block";
-            }
-          });
-      }
-
-      checkUsername();
-      updateLeaderboard();
-    </script>
   </body>
 </html>

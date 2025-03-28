@@ -39,6 +39,10 @@ def init_db():
 def index():
     return render_template("index.html")
 
+@app.route("/blackjack")
+def blackjack():
+    return render_template("blackjack.html")
+
 @app.route("/start", methods=["POST"])
 def start_game():
     global deck, player, dealer

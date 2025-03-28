@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+    />
+    <title>Blackjack</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        margin: 0;
+        padding: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        background-color: #f4f4f9;
+        color: #333;
+        overflow-x: hidden;
+      }
+      header {
+        width: 100%;
+        background-color: #007bff;
+        color: white;
+        padding: 10px 0;
+        text-align: center;
+        font-size: 24px;
+        position: relative;
+      }
+      nav {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+      }
+      nav a {
+        margin: 0 10px;
+        color: white;
+        text-decoration: none;
+        font-size: 18px;
+      }
+      nav a:hover {
+        text-decoration: underline;
+      }
+      .game-container {
+        margin-top: 20px;
+        text-align: center;
+        width: 100%;
+        max-width: 600px;
+      }
+      .hand {
+        margin: 15px;
+        padding: 15px;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        background-color: #fff;
+        display: inline-block;
+        width: calc(50% - 20px);
+        min-height: 100px;
+        box-sizing: border-box;
+      }
+      .buttons {
+        margin: 20px;
+        display: flex;
+        justify-content: center;
+        flex-wrap: wrap;
+      }
+      button {
+        padding: 10px 20px;
+        margin: 5px;
+        font-size: 16px;
+        cursor: pointer;
+        border: none;
+        border-radius: 5px;
+        background-color: #007bff;
+        color: white;
+        transition: background-color 0.3s;
+        flex: 1 1 calc(33% - 10px);
+        max-width: 150px;
+      }
+      button:hover {
+        background-color: #0056b3;
+      }
+      #result {
+        font-size: 18px;
+        margin-top: 20px;
+        font-weight: bold;
+        min-height: 24px; /* Prevent layout shift when result text changes */
+      }
+      #leaderboard {
+        margin-top: 30px;
+        text-align: left;
+        width: 100%;
+        max-width: 600px;
+      }
+      #leaderboard table {
+        width: 100%;
+        border-collapse: collapse;
+      }
+      #leaderboard th,
+      #leaderboard td {
+        border: 1px solid #ccc;
+        padding: 8px;
+        text-align: left;
+        word-wrap: break-word; /* Prevent long words from breaking layout */
+      }
+      #leaderboard th {
+        background-color: #f0f0f0;
+      }
+      @media (max-width: 768px) {
+        .hand {
+          width: 100%;
+        }
+        button {
+          flex: 1 1 100%;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      Blackjack
+      <nav>
+        <a href="/">Home</a>
+        <a href="https://discord.com" target="_blank">Discord</a>
+        <a href="https://github.com" target="_blank">GitHub</a>
+      </nav>
+    </header>
+    <div class="game-container">
+      <div id="dealer" class="hand">
+        <h3>Dealer's Hand</h3>
+        <p id="dealer-hand"></p>
+        <p id="dealer-value"></p>
+      </div>
+      <div id="player" class="hand">
+        <h3>Your Hand</h3>
+        <p id="player-hand"></p>
+        <p id="player-value"></p>
+      </div>
+      <div class="buttons">
+        <button id="start-btn">Start Game</button>
+        <button id="hit-btn" disabled>Hit</button>
+        <button id="stand-btn" disabled>Stand</button>
+      </div>
+      <p id="result"></p>
+    </div>
+    <div id="leaderboard">
+      <h2>Leaderboard</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Rank</th>
+            <th>Name</th>
+            <th>Score</th>
+          </tr>
+        </thead>
+        <tbody id="leaderboard-body"></tbody>
+      </table>
+    </div>
+    <script>
+      class Card {
+        constructor(suit, rank) {
+          this.suit = suit;
+          this.rank = rank;
+        }
+
+        value() {
+          if (["J", "Q", "K"].includes(this.rank)) {
+            return 10;
+          } else if (this.rank === "A") {
+            return 11; // Ace can also be 1, handled in game logic
+          } else {
+            return parseInt(this.rank);
+          }
+        }
+
+        toString() {
+          return `${this.rank} of ${this.suit}`;
+        }
+      }
+
+      class Deck {
+        constructor() {
+          const suits = ["Hearts", "Diamonds", "Clubs", "Spades"];
+          const ranks = [
+            "2",
+            "3",
+            "4",
+            "5",
+            "6",
+            "7",
+            "8",
+            "9",
+            "10",
+            "J",
+            "Q",
+            "K",
+            "A",
+          ];
+          this.cards = [];
+          for (const suit of suits) {
+            for (const rank of ranks) {
+              this.cards.push(new Card(suit, rank));
+            }
+          }
+          this.shuffle();
+        }
+
+        shuffle() {
+          for (let i = this.cards.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [this.cards[i], this.cards[j]] = [this.cards[j], this.cards[i]];
+          }
+        }
+
+        draw() {
+          return this.cards.pop();
+        }
+      }
+
+      class Player {
+        constructor(name) {
+          this.name = name;
+          this.hand = [];
+        }
+
+        addCard(card) {
+          this.hand.push(card);
+        }
+
+        handValue() {
+          let value = this.hand.reduce((sum, card) => sum + card.value(), 0);
+          let aces = this.hand.filter((card) => card.rank === "A").length;
+          while (value > 21 && aces > 0) {
+            value -= 10;
+            aces -= 1;
+          }
+          return value;
+        }
+
+        toString() {
+          return `${this.name}'s hand: ${this.hand
+            .map((card) => card.toString())
+            .join(", ")}`;
+        }
+      }
+
+      let deck, player, dealer;
+
+      const startBtn = document.getElementById("start-btn");
+      const hitBtn = document.getElementById("hit-btn");
+      const standBtn = document.getElementById("stand-btn");
+      const playerHand = document.getElementById("player-hand");
+      const playerValue = document.getElementById("player-value");
+      const dealerHand = document.getElementById("dealer-hand");
+      const dealerValue = document.getElementById("dealer-value");
+      const result = document.getElementById("result");
+      const leaderboardBody = document.getElementById("leaderboard-body");
+
+      startBtn.addEventListener("click", () => {
+        deck = new Deck();
+        player = new Player("Player");
+        dealer = new Player("Dealer");
+
+        // Initial deal
+        for (let i = 0; i < 2; i++) {
+          player.addCard(deck.draw());
+          dealer.addCard(deck.draw());
+        }
+
+        updateUI();
+        hitBtn.disabled = false;
+        standBtn.disabled = false;
+        result.textContent = "";
+      });
+
+      hitBtn.addEventListener("click", () => {
+        player.addCard(deck.draw());
+        if (player.handValue() > 21) {
+          result.textContent = "Bust! You lose.";
+          hitBtn.disabled = true;
+          standBtn.disabled = true;
+        }
+        updateUI();
+      });
+
+      standBtn.addEventListener("click", () => {
+        while (dealer.handValue() < 17) {
+          dealer.addCard(deck.draw());
+        }
+
+        const dealerScore = dealer.handValue();
+        const playerScore = player.handValue();
+
+        if (dealerScore > 21 || playerScore > dealerScore) {
+          result.textContent = "You win!";
+        } else if (playerScore < dealerScore) {
+          result.textContent = "You lose!";
+        } else {
+          result.textContent = "It's a tie!";
+        }
+
+        hitBtn.disabled = true;
+        standBtn.disabled = true;
+        updateUI();
+      });
+
+      function updateUI() {
+        playerHand.textContent = player.hand
+          .map((card) => card.toString())
+          .join(", ");
+        playerValue.textContent = `Value: ${player.handValue()}`;
+        dealerHand.textContent = dealer.hand
+          .map((card) => card.toString())
+          .join(", ");
+        dealerValue.textContent = `Value: ${dealer.handValue()}`;
+      }
+
+      function updateLeaderboard() {
+        // Simulate fetching leaderboard data
+        const leaderboardData = [
+          { name: "Player1", score: 100 },
+          { name: "Player2", score: 90 },
+          { name: "Player3", score: 80 },
+        ];
+        leaderboardBody.innerHTML = "";
+        leaderboardData.forEach((player, index) => {
+          const row = document.createElement("tr");
+          row.innerHTML = `<td>${index + 1}</td><td>${player.name}</td><td>${
+            player.score
+          }</td>`;
+          leaderboardBody.appendChild(row);
+        });
+      }
+
+      updateLeaderboard();
+    </script>
+  </body>
+</html>

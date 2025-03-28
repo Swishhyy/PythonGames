@@ -23,15 +23,16 @@ class Deck:
         suits = ['Hearts', 'Diamonds', 'Clubs', 'Spades']
         ranks = ['2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A']
         self.cards = [Card(suit, rank) for suit in suits for rank in ranks]
-        self._weighted_shuffle()
+        self._balanced_shuffle()
 
-    def _weighted_shuffle(self):
-        # Shuffle with reduced chances for high cards
+    def _balanced_shuffle(self):
+        # Shuffle with reduced chances for high cards in the initial deal
         high_cards = [card for card in self.cards if card.rank in ['10', 'J', 'Q', 'K', 'A']]
         low_cards = [card for card in self.cards if card.rank not in ['10', 'J', 'Q', 'K', 'A']]
         random.shuffle(low_cards)
         random.shuffle(high_cards)
-        self.cards = low_cards + high_cards  # Place high cards at the bottom
+        self.cards = low_cards[:30] + high_cards[:22] + low_cards[30:] + high_cards[22:]
+        random.shuffle(self.cards)
 
     def draw(self):
         return self.cards.pop()
